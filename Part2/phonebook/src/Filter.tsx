@@ -1,17 +1,10 @@
 import React, { useEffect } from 'react'
+import { Person } from './types/Person';
 interface props {
-    persons: {
-        name: string;
-        number: string;
-        id: number;
-    }[]
+    persons: Person[]
     filterName: string,
     setFilterNameFunc: React.Dispatch<React.SetStateAction<string>>,
-    handleFilterChange: React.Dispatch<React.SetStateAction<{
-        name: string;
-        number: string;
-        id: number;
-    }[]>>
+    handleFilterChange: React.Dispatch<React.SetStateAction<Person[]>>
   }
 
 const Filter = ({filterName, setFilterNameFunc, handleFilterChange, persons}: props) => {

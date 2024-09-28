@@ -3,7 +3,7 @@ interface props{
     persons: {
         name: string;
         number: string;
-        id: number;
+        id: string;
     }[]
 }
 const Persons = ({persons}: props) => {

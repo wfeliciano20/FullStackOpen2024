@@ -34,7 +34,7 @@ function App() {
       return;
     }
     const newPerson = {
-      id: ((persons?.length || 0) + 1),  // auto-increment id for each new person added
+      id: ""+((persons?.length || 0) + 1),  // auto-increment id for each new person added
       name: newName,
       number: newNumber
     }
