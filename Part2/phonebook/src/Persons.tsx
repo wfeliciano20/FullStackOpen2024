@@ -4,14 +4,15 @@ interface props{
         name: string;
         number: string;
         id: string;
-    }[]
+    }[],
+    DeleteFunc:  (id: string) => Promise<void>
 }
-const Persons = ({persons}: props) => {
+const Persons = ({persons, DeleteFunc }: props) => {
   return (
     <div>
         {persons?.map(person => 
         <div key={person.id}>
-          {person.name} {person.number}
+          {person.name} {person.number} <button onClick={() => DeleteFunc(person.id)}>Delete</button>
         </div>
       )}
     </div>

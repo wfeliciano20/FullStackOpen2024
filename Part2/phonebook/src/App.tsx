@@ -3,7 +3,7 @@ import Filter from './Filter'
 import PersonForm from './PersonForm'
 import Persons from './Persons'
 import { Person } from './types/Person'
-import {getAll, create} from './services/phonebookService';
+import {getAll, create, remove, update} from './services/phonebookService';
 
 
 
@@ -26,11 +26,28 @@ function App() {
     fetchPersonsAsync();
   }, [])
   
+  const handleDelete = async (id: string) => {
+    await remove(id);
+    setPersons(prev => prev.filter(person => person.id!== id));
+    setFilteredPersons(prev => prev.filter(person => person.id!== id));
+  }
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>{
     e.preventDefault();
-  if(persons?.some(person => person?.name === newName)) {
-      alert(`${newName} is already added to the phonebook`);
+    const existingPerson = persons.find(person => person.name === newName);
+    if(existingPerson) {
+      if(confirm("Do you want to overwrite the existing number for "+newName)){
+        
+        const updatedPerson = await update(existingPerson.id, {...existingPerson, number: newNumber});
+        setPersons(prev => prev.map(person => person.name === updatedPerson.name ? updatedPerson: person));
+        setFilteredPersons(prev => prev.map(person => person.name === updatedPerson.name ? updatedPerson: person));
+        setNewName("");
+        setNewNumber("");
+      }
+      return;
+    }
+    if(newName.length<1 || newNumber.length<1) {
+      alert("Name and number must not be empty");
       return;
     }
     const newPerson = {
@@ -55,7 +72,7 @@ function App() {
       <h3>Add a new entry</h3>
      <PersonForm submitForm={handleSubmit} name={newName} number={newNumber} setName={setNewName} setNumber={setNewNumber} />
       <h2>Numbers</h2>
-      <Persons persons={filteredPersons} />
+      <Persons persons={filteredPersons} DeleteFunc={handleDelete} />
     </div>
   );
 }

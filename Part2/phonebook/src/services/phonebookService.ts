@@ -13,12 +13,12 @@ const create = async (newPerson: Person) => {
   return response.data;
 };
 
-const update = async (id:number, updatedPerson: Person) => {
+const update = async (id:string, updatedPerson: Person) => {
   const response = await axios.put(`${baseUrl}/${id}`, updatedPerson);
   return response.data;
 };
 
-const remove = async (id:number) => {
+const remove = async (id:string) => {
   const response = await axios.delete(`${baseUrl}/${id}`);
   return response.data;
 };
