@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react'
 import Filter from './Filter'
 import PersonForm from './PersonForm'
 import Persons from './Persons'
 import { Person } from './types/Person'
+import Notification from './Notification'
 import {getAll, create, remove, update} from './services/phonebookService';
 
 
@@ -14,6 +16,8 @@ function App() {
   const [filterName, setFilterName] = useState('')
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
+  const [message, setMessage] = useState<string | null>(null);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     const fetchPersonsAsync = async () => {
@@ -25,11 +29,25 @@ function App() {
 
     fetchPersonsAsync();
   }, [])
+
+  const handleNotification = (message: string | null, isError: boolean) => {
+    setMessage(message);
+    setIsError(isError);
+    setTimeout(() => {
+      setMessage(null);
+      setIsError(false);
+    }, 5000)
+  }
   
   const handleDelete = async (id: string) => {
-    await remove(id);
-    setPersons(prev => prev.filter(person => person.id!== id));
-    setFilteredPersons(prev => prev.filter(person => person.id!== id));
+    try {
+      await remove(id);
+      handleNotification(`Successfully deleted entry with id ${id}`, false);
+      setPersons(prev => prev.filter(person => person.id!== id));
+      setFilteredPersons(prev => prev.filter(person => person.id!== id));
+    } catch (error: any) {
+      handleNotification(`Error deleting entry with id ${id}\nerror:${error?.message}` , true);
+    }
   }
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>{
@@ -37,12 +55,16 @@ function App() {
     const existingPerson = persons.find(person => person.name === newName);
     if(existingPerson) {
       if(confirm("Do you want to overwrite the existing number for "+newName)){
-        
-        const updatedPerson = await update(existingPerson.id, {...existingPerson, number: newNumber});
-        setPersons(prev => prev.map(person => person.name === updatedPerson.name ? updatedPerson: person));
-        setFilteredPersons(prev => prev.map(person => person.name === updatedPerson.name ? updatedPerson: person));
-        setNewName("");
-        setNewNumber("");
+        try{
+          const updatedPerson = await update(existingPerson.id, {...existingPerson, number: newNumber});
+          setPersons(prev => prev.map(person => person.name === updatedPerson.name ? updatedPerson: person));
+          setFilteredPersons(prev => prev.map(person => person.name === updatedPerson.name ? updatedPerson: person));
+          setNewName("");
+          setNewNumber("");
+          handleNotification(`Successfully updated ${existingPerson.name}`, false);
+        }catch(error: any){
+          handleNotification(`Error updating ${existingPerson.name}\nerror:${error?.message}`, true);
+        }
       }
       return;
     }
@@ -55,18 +77,24 @@ function App() {
       name: newName,
       number: newNumber
     }
-    const response = await create(newPerson);
+    try{
+      const response = await create(newPerson);
+      setPersons(prev => [...(prev || []), response])
+      setFilteredPersons(prev => [...prev, response]); // update the filtered persons list as well
+      setNewName('');
+      setNewNumber('');
+      handleNotification(`Successfully added ${newName}`, false);
+    }catch(error: any){
+      handleNotification(`Error adding entry: ${error?.message}`, true);
+    }
 
-    setPersons(prev => [...(prev || []), response])
-    setFilteredPersons(prev => [...prev, response]); // update the filtered persons list as well
-    setNewName('');
-    setNewNumber('');
   }
   
 
 
   return (
     <div>
+      {message && <Notification message={message} isError={isError} />}
       <h2>Phonebook</h2>
     <Filter filterName={filterName} setFilterNameFunc={setFilterName} handleFilterChange={setFilteredPersons} persons={persons||[]} />
       <h3>Add a new entry</h3>
